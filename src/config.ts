@@ -47,11 +47,11 @@ export const siteConfig = {
   // 链接
   // 使用 Iconify 图标名称（例如 Material Design Icons 的 'mdi:' 前缀）
   links: [
-    { name: "GitHub", url: "https://github.com/HoshizukiMio", icon: "mdi:github" },
-    { name: "Blog", url: "https://blog.hoshizukimio.com/", icon: "mdi:post-outline" },
-    { name: "Telegram", url: "https://t.me/hoshizukimio", icon: "mdi:telegram" },
-    { name: "Bilibili", url: "https://bilibili.com/348794946", icon: "ri:bilibili-line" },
-    { name: "Email", url: "mailto:hoshizukimio@hoshizukimio.com", icon: "mdi:email-outline" },
+    { name: "GitHub", url: "https://github.com/", icon: "mdi:github" },
+    { name: "Blog", url: "https://blog.example.com/", icon: "mdi:post-outline" },
+    { name: "Telegram", url: "https://t.me/", icon: "mdi:telegram" },
+    { name: "Bilibili", url: "https://space.bilibili.com/", icon: "ri:bilibili-line" },
+    { name: "Email", url: "mailto:hello@example.com", icon: "mdi:email-outline" },
   ],
 
   // 音乐播放器（MetingJS）
