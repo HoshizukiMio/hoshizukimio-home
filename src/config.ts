@@ -43,7 +43,10 @@ export const siteConfig = {
 
   // Music Player (MetingJS)
   music: {
-    // Meting API URL. Keep empty "" or undefined to use MetingJS default API.
+    // Meting API base URL or full template URL.
+    // Base URL example: "https://your-domain.com/api"
+    // Template example: "https://your-domain.com/api?server=:server&type=:type&id=:id&r=:r"
+    // Keep empty "" or undefined to use MetingJS default API.
     // Self-hosted See Here: "https://github.com/metowolf/Meting-API"
     api: "https://meting-api.hoshizukimio.com/api",
     server: "netease", // netease, tencent, kugou, xiami, baidu

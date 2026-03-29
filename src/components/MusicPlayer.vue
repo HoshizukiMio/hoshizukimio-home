@@ -6,7 +6,7 @@
     </h2>
     <div class="player-wrapper overflow-hidden rounded-xl bg-white/10 backdrop-blur-sm shadow-inner">
       <meting-js
-        :api="siteConfig.music.api"
+        :api="metingApi"
         :server="siteConfig.music.server"
         :type="siteConfig.music.type"
         :id="siteConfig.music.id"
@@ -21,8 +21,43 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Icon } from '@iconify/vue';
 import { siteConfig } from '@/config';
+
+const METING_API_QUERY = 'server=:server&type=:type&id=:id&r=:r';
+
+function resolveMetingApiUrl(api?: string) {
+  const trimmed = api?.trim();
+
+  if (!trimmed) {
+    return undefined;
+  }
+
+  const hasTemplatePlaceholders =
+    trimmed.includes(':server') &&
+    trimmed.includes(':type') &&
+    trimmed.includes(':id');
+
+  const hasExplicitQueryParams =
+    /(?:\?|&)server=/.test(trimmed) &&
+    /(?:\?|&)type=/.test(trimmed) &&
+    /(?:\?|&)id=/.test(trimmed);
+
+  if (hasTemplatePlaceholders || hasExplicitQueryParams) {
+    return trimmed;
+  }
+
+  const separator = trimmed.includes('?')
+    ? trimmed.endsWith('?') || trimmed.endsWith('&')
+      ? ''
+      : '&'
+    : '?';
+
+  return `${trimmed}${separator}${METING_API_QUERY}`;
+}
+
+const metingApi = computed(() => resolveMetingApiUrl(siteConfig.music.api));
 </script>
 
 <style scoped>
