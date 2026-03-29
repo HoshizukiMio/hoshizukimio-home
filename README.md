@@ -54,7 +54,7 @@ avatar: "https://..."
 
 ### 背景图
 
-支持两种模式：
+支持桌面端和手机端分别配置，每一端都支持两种模式：
 
 - `mode: "api"`: 从接口拉取背景图
 - `mode: "list"`: 从本地配置数组中随机选择
@@ -63,11 +63,26 @@ avatar: "https://..."
 
 ```ts
 background: {
-  mode: "api",
-  api: "https://api-img.hoshizukimio.com",
-  list: []
+  breakpoint: 768,
+  desktop: {
+    mode: "api",
+    api: "https://api-img.hoshizukimio.com",
+    list: []
+  },
+  mobile: {
+    mode: "list",
+    list: [
+      "https://example.com/mobile-wallpaper.jpg"
+    ]
+  }
 }
 ```
+
+- `breakpoint`: 小于该宽度时使用 `mobile` 配置
+- `desktop`: 桌面端背景配置
+- `mobile`: 手机端背景配置
+
+如果只配置了一端，组件会自动回退到另一端配置；如果两端都加载失败，则回退到内置默认背景。
 
 ### 一言文案
 
@@ -113,6 +128,29 @@ music: {
 - `type`: 数据类型，例如 `song`、`playlist`、`album`、`artist`
 - `id`: 歌曲、歌单或专辑 ID
 - `autoPlay`: 是否自动播放
+
+### 页脚
+
+支持添加纯文本或带链接的自定义内容，例如版权信息、备案号、公安备案链接等。
+
+```ts
+footer: {
+  enabled: true,
+  items: [
+    "© 2026 你的名字",
+    {
+      text: "沪ICP备12345678号",
+      href: "https://beian.miit.gov.cn/",
+      target: "_blank"
+    }
+  ]
+}
+```
+
+- `enabled`: 是否显示页脚
+- `items`: 页脚条目列表
+- 字符串条目会按纯文本渲染
+- 对象条目可设置 `text`、`href`、`target`、`rel`
 
 ## 部署建议
 

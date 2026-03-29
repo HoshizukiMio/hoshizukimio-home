@@ -1,3 +1,5 @@
+const currentYear = new Date().getFullYear();
+
 export const siteConfig = {
   // Personal Info
   author: "星月澪",
@@ -6,18 +8,30 @@ export const siteConfig = {
   
   // Background Settings
   background: {
-    // Mode can be 'api' (fetches from an API URL) or 'list' (picks randomly from the list below)
-    mode: "api",
-    
-    // Used if mode is 'api'
-    api: "https://api-img.hoshizukimio.com",
-    
-    // Used if mode is 'list'
-    list: [
-      "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=1920&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1507146426996-ef05306b995a?q=80&w=1920&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?q=80&w=1920&auto=format&fit=crop"
-    ]
+    // Below this width, the mobile background preset is used.
+    breakpoint: 768,
+
+    desktop: {
+      // Mode can be 'api' (fetches from an API URL) or 'list' (picks randomly from the list below)
+      mode: "list",
+
+      // Used if mode is 'api'
+      api: "https://api-img.hoshizukimio.com",
+
+      // Used if mode is 'list'
+      // List items can be remote image URLs, "/image.png" from public/.
+      // Hotlink-protected sources may return 403 in the browser.
+      list: [
+        "./background.webp"
+      ]
+    },
+
+    mobile: {
+      mode: "list",
+      list: [
+        "https://raw.githubusercontent.com/HoshizukiMio/HoshizukiMio/main/assets/banner.png"
+      ]
+    }
   },
   
   // Hitokoto / Quotes
@@ -53,5 +67,13 @@ export const siteConfig = {
     type: "playlist",  // song, playlist, album, search, artist
     id: "13606034252",     // Playlist ID
     autoPlay: false
+  },
+
+  // Footer
+  footer: {
+    enabled: true,
+    items: [
+      `© ${currentYear} 星月澪`
+    ]
   }
 };

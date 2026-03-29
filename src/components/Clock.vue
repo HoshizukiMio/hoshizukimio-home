@@ -1,14 +1,14 @@
 <template>
-  <div class="glass rounded-3xl p-6 sm:p-8 w-full flex flex-row items-center justify-between hover:shadow-lg transition-shadow duration-300">
+  <div class="glass flex w-full flex-col gap-4 rounded-[2rem] p-5 transition-shadow duration-300 hover:shadow-lg sm:flex-row sm:items-center sm:justify-between sm:p-8">
     <div class="flex flex-col items-start">
-      <div class="text-4xl sm:text-5xl font-bold tracking-wider drop-shadow-md font-mono">
+      <div class="font-mono text-3xl font-bold tracking-wider drop-shadow-md sm:text-5xl">
         {{ time }}
       </div>
-      <div class="text-sm sm:text-base text-gray-200 mt-2 drop-shadow">
+      <div class="mt-2 text-xs text-gray-200 drop-shadow sm:text-base">
         {{ date }}
       </div>
     </div>
-    <div class="text-6xl opacity-80 drop-shadow-md">
+    <div class="self-end text-5xl opacity-80 drop-shadow-md sm:self-auto sm:text-6xl">
       <Icon icon="mdi:clock-outline" />
     </div>
   </div>

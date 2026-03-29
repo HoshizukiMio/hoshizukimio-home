@@ -22,12 +22,27 @@
   50% { opacity: 0; }
 }
 
+html {
+  background: #050816;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 /* Base styles */
 body {
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
   font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
   color: #fff;
-  overflow: hidden; /* Prevent body scroll, layout fits screen */
+  overflow-x: hidden;
+  background: #050816;
+}
+
+#app {
+  min-height: 100vh;
+  min-height: 100svh;
 }
