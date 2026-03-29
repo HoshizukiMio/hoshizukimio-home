@@ -5,6 +5,7 @@ export const siteConfig = {
   author: "星月澪",
   description: "二次元 | 开发者",
   avatar: "https://avatars.githubusercontent.com/u/164364793?v=4", // 头像地址
+  favicon: "./favicon.ico",
   
   // 背景设置
   background: {
@@ -16,7 +17,7 @@ export const siteConfig = {
       mode: "list",
 
       // 当模式为 'api' 时使用
-      api: "",
+      api: "https://img-api.hoshizukimio.com",
 
       // 当模式为 'list' 时使用
       // 列表项可以是远程图片 URL，或 public/ 下的图片
@@ -46,11 +47,11 @@ export const siteConfig = {
   // 链接
   // 使用 Iconify 图标名称（例如 Material Design Icons 的 'mdi:' 前缀）
   links: [
-    { name: "GitHub", url: "https://github.com/", icon: "mdi:github" },
-    { name: "Blog", url: "https://example.com/", icon: "mdi:post-outline" },
-    { name: "Twitter", url: "https://twitter.com/", icon: "mdi:twitter" },
-    { name: "Bilibili", url: "https://bilibili.com/", icon: "ri:bilibili-line" },
-    { name: "Email", url: "mailto:hello@example.com", icon: "mdi:email-outline" },
+    { name: "GitHub", url: "https://github.com/HoshizukiMio", icon: "mdi:github" },
+    { name: "Blog", url: "https://blog.hoshizukimio.com/", icon: "mdi:post-outline" },
+    { name: "Telegram", url: "https://t.me/hoshizukimio", icon: "mdi:telegram" },
+    { name: "Bilibili", url: "https://bilibili.com/348794946", icon: "ri:bilibili-line" },
+    { name: "Email", url: "mailto:hoshizukimio@hoshizukimio.com", icon: "mdi:email-outline" },
   ],
 
   // 音乐播放器（MetingJS）

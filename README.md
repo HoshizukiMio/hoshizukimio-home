@@ -51,7 +51,8 @@ npm run preview
 ```ts
 author: "你的名字",
 description: "描述一下自己",
-avatar: "https://..."
+avatar: "https://...",
+favicon: "./favicon.ico"
 ```
 
 ### 背景图

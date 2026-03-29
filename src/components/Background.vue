@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { siteConfig } from '@/config';
+import { resolveAssetPath } from '@/utils/assets';
 
 const DEFAULT_BACKGROUND =
   'https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=1920&auto=format&fit=crop';
@@ -66,37 +67,20 @@ function shuffle<T>(items: T[]) {
   return result;
 }
 
-function resolveAssetPath(path: string) {
-  if (/^(https?:)?\/\//.test(path) || /^(data|blob):/.test(path)) {
-    return path;
-  }
-
-  if (path.startsWith('/')) {
-    return path;
-  }
-
-  if (path.startsWith('./')) {
-    return `/${path.slice(2)}`;
-  }
-
-  return `/${path}`;
-}
-
 function resolvePresetCandidates(preset?: BackgroundPreset) {
   if (!preset) {
     return [];
   }
 
   if (preset.mode === 'api') {
-    const apiUrl = preset.api?.trim();
-    return apiUrl ? [appendCacheBuster(resolveAssetPath(apiUrl))] : [];
+    const apiUrl = resolveAssetPath(preset.api);
+    return apiUrl ? [appendCacheBuster(apiUrl)] : [];
   }
 
   const list = Array.isArray(preset.list)
     ? preset.list
-        .map((item) => item?.trim())
+        .map((item) => resolveAssetPath(item))
         .filter((item): item is string => Boolean(item))
-        .map(resolveAssetPath)
     : [];
 
   return shuffle(list);
