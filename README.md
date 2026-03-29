@@ -2,6 +2,8 @@
 
 一个基于 Vue 3 + Vite + Tailwind CSS 的个人主页项目，包含动态背景、个人信息卡片、一言、快捷导航，以及通过 APlayer + MetingJS 接入的歌单播放器。
 
+![截图](./screenshot/screenshot.png)
+
 ## 功能
 
 - 毛玻璃风格的单页个人主页布局

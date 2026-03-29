@@ -39,9 +39,8 @@ export const siteConfig = {
     enableAPI: true, // If true, fetches from the api URL below. If false, uses local quotes.
     api: "https://v1.hitokoto.cn?c=a&c=b&c=c", // Custom Hitokoto API URL
     localQuotes: [
-      { text: "心之所向，素履以往。", from: "七堇年" },
-      { text: "There is always light behind the clouds。", from: "小妇人" },
-      { text: "星空之下，皆是梦想。", from: "原创" }
+      { text: "所以……我来成为神明！", from: "丰川祥子" },
+      { text: "欢迎来到Ave Mujica的世界", from: "BanG Dream! Ave Mujica" }
     ]
   },
 
