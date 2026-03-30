@@ -11,7 +11,7 @@ export interface SiteLinkFolder {
   type: "folder";
   name: string;
   icon?: string;
-  children: SiteLink[];
+  children?: SiteLink[];
 }
 
 export type SiteLinkItem = SiteLink | SiteLinkFolder;
