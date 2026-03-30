@@ -73,6 +73,7 @@ export const siteConfig = {
   hitokoto: {
     enableAPI: true, // 为 true 时从下面的接口获取；为 false 时使用本地文案
     api: "https://v1.hitokoto.cn?c=a&c=b&c=c", // 自定义一言接口地址
+    rotateInterval: 15000, // 一言完整显示后等待多久再切换（毫秒）
     localQuotes: [
       { text: "所以……我来成为神明！", from: "丰川祥子" },
       { text: "欢迎来到Ave Mujica的世界", from: "BanG Dream! Ave Mujica" }
