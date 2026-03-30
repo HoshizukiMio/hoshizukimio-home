@@ -96,11 +96,14 @@ background: {
 hitokoto: {
   enableAPI: true,
   api: "https://v1.hitokoto.cn?c=a&c=b&c=c",
+  rotateInterval: 15000,
   localQuotes: [
     { text: "心之所向，素履以往。", from: "七堇年" }
   ]
 }
 ```
+
+- `rotateInterval`: 一言完整显示后多久切换下一条，单位为毫秒
 
 ### 导航链接
 

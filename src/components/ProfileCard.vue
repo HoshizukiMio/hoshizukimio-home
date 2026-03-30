@@ -24,12 +24,97 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { siteConfig } from '@/config';
 
 const currentQuote = ref('');
 const currentSource = ref('');
 const isTyping = ref(true);
+let typingTimer: number | undefined;
+let typingDoneTimer: number | undefined;
+let rotateTimer: number | undefined;
+let lastLocalQuoteIndex = -1;
+let isDisposed = false;
+
+const clearTimers = () => {
+  if (typingTimer !== undefined) {
+    window.clearInterval(typingTimer);
+    typingTimer = undefined;
+  }
+
+  if (typingDoneTimer !== undefined) {
+    window.clearTimeout(typingDoneTimer);
+    typingDoneTimer = undefined;
+  }
+
+  if (rotateTimer !== undefined) {
+    window.clearTimeout(rotateTimer);
+    rotateTimer = undefined;
+  }
+};
+
+const getRotateInterval = () => {
+  const interval = Number(siteConfig.hitokoto.rotateInterval);
+
+  if (Number.isFinite(interval) && interval > 0) {
+    return interval;
+  }
+
+  return 15000;
+};
+
+const scheduleNextQuote = () => {
+  if (isDisposed) {
+    return;
+  }
+
+  if (rotateTimer !== undefined) {
+    window.clearTimeout(rotateTimer);
+  }
+
+  rotateTimer = window.setTimeout(() => {
+    void fetchHitokoto();
+  }, getRotateInterval());
+};
+
+const typeQuote = (text: string, source: string) => {
+  if (isDisposed) {
+    return;
+  }
+
+  clearTimers();
+
+  const safeText = text?.trim() || '欢迎来到这里。';
+  const safeSource = source?.trim() || '本站';
+  let index = 0;
+
+  currentQuote.value = '';
+  currentSource.value = safeSource;
+  isTyping.value = true;
+
+  typingTimer = window.setInterval(() => {
+    if (isDisposed) {
+      clearTimers();
+      return;
+    }
+
+    if (index < safeText.length) {
+      currentQuote.value += safeText.charAt(index);
+      index += 1;
+      return;
+    }
+
+    if (typingTimer !== undefined) {
+      window.clearInterval(typingTimer);
+      typingTimer = undefined;
+    }
+
+    typingDoneTimer = window.setTimeout(() => {
+      isTyping.value = false;
+      scheduleNextQuote();
+    }, 300);
+  }, 100);
+};
 
 const fetchHitokoto = async () => {
   if (siteConfig.hitokoto.enableAPI) {
@@ -37,7 +122,15 @@ const fetchHitokoto = async () => {
       const apiUrl = siteConfig.hitokoto.api || 'https://v1.hitokoto.cn';
       const res = await fetch(apiUrl);
       const data = await res.json();
-      typeQuote(data.hitokoto, data.from);
+      const text = typeof data?.hitokoto === 'string' ? data.hitokoto : '';
+      const source = typeof data?.from === 'string' ? data.from : '一言';
+
+      if (text) {
+        typeQuote(text, source);
+        return;
+      }
+
+      fallbackQuote();
     } catch (e) {
       fallbackQuote();
     }
@@ -47,9 +140,22 @@ const fetchHitokoto = async () => {
 };
 
 const fallbackQuote = () => {
-  const quotes = siteConfig.hitokoto.localQuotes;
-  const quote = quotes[Math.floor(Math.random() * quotes.length)];
-  // Check if it's an object with text and from, or just a string from old config
+  const quotes = Array.isArray(siteConfig.hitokoto.localQuotes) ? siteConfig.hitokoto.localQuotes : [];
+
+  if (!quotes.length) {
+    typeQuote('欢迎来到这里。', '本站');
+    return;
+  }
+
+  let nextIndex = Math.floor(Math.random() * quotes.length);
+
+  if (quotes.length > 1 && nextIndex === lastLocalQuoteIndex) {
+    nextIndex = (nextIndex + 1) % quotes.length;
+  }
+
+  lastLocalQuoteIndex = nextIndex;
+
+  const quote = quotes[nextIndex];
   if (typeof quote === 'string') {
     typeQuote(quote, '未知');
   } else {
@@ -57,25 +163,12 @@ const fallbackQuote = () => {
   }
 };
 
-const typeQuote = (text: string, source: string) => {
-  let index = 0;
-  currentQuote.value = '';
-  currentSource.value = source;
-  isTyping.value = true;
-  const interval = setInterval(() => {
-    if (index < text.length) {
-      currentQuote.value += text.charAt(index);
-      index++;
-    } else {
-      clearInterval(interval);
-      setTimeout(() => {
-        isTyping.value = false;
-      }, 300); // Small delay before hiding cursor and showing source
-    }
-  }, 100);
-};
-
 onMounted(() => {
-  fetchHitokoto();
+  void fetchHitokoto();
+});
+
+onBeforeUnmount(() => {
+  isDisposed = true;
+  clearTimers();
 });
 </script>
