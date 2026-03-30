@@ -2,6 +2,7 @@ const currentYear = new Date().getFullYear();
 
 export const siteConfig = {
   // 个人信息
+  title: "星月澪の小站",
   author: "星月澪",
   description: "二次元 | 开发者",
   avatar: "https://avatars.githubusercontent.com/u/164364793?v=4", // 头像地址

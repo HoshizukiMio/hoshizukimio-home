@@ -49,6 +49,7 @@ npm run preview
 ### 个人信息
 
 ```ts
+title: "你的网站标题",
 author: "你的名字",
 description: "描述一下自己",
 avatar: "https://...",
