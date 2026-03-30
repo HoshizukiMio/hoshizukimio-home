@@ -6,7 +6,7 @@
     </h2>
     
     <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-      <template v-for="(item, index) in siteConfig.links" :key="getItemKey(item, index)">
+      <template v-for="(item, index) in linkItems" :key="getItemKey(item, index)">
         <template v-if="isFolder(item)">
           <button
             type="button"
@@ -16,7 +16,7 @@
           >
             <Icon :icon="item.icon || 'mdi:folder-outline'" class="text-2xl text-white/80 transition-colors group-hover:text-white sm:text-3xl" />
             <span class="text-xs font-medium text-white/90 group-hover:text-white sm:text-sm">{{ item.name }}</span>
-            <span class="text-[11px] text-white/55 sm:text-xs">{{ item.children.length }} 个链接</span>
+            <span class="text-[11px] text-white/55 sm:text-xs">{{ getFolderChildren(item).length }} 个链接</span>
           </button>
         </template>
 
@@ -59,9 +59,9 @@
           </button>
         </div>
 
-        <div v-if="activeFolder.children.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div v-if="activeFolderChildren.length" class="grid grid-cols-2 gap-3 sm:grid-cols-3">
           <a
-            v-for="child in activeFolder.children"
+            v-for="child in activeFolderChildren"
             :key="`${activeFolder.name}-${child.name}`"
             :href="child.url"
             target="_blank"
@@ -83,14 +83,20 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { siteConfig, type SiteLinkFolder, type SiteLinkItem } from '@/config';
 
 const activeFolder = ref<SiteLinkFolder | null>(null);
+const linkItems = computed<SiteLinkItem[]>(() => Array.isArray(siteConfig.links) ? siteConfig.links : []);
+const activeFolderChildren = computed(() => getFolderChildren(activeFolder.value));
 
 function isFolder(item: SiteLinkItem): item is SiteLinkFolder {
   return item.type === 'folder';
+}
+
+function getFolderChildren(folder: SiteLinkFolder | null) {
+  return Array.isArray(folder?.children) ? folder.children : [];
 }
 
 function getItemKey(item: SiteLinkItem, index: number) {
