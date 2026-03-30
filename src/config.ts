@@ -1,5 +1,39 @@
 const currentYear = new Date().getFullYear();
 
+export interface SiteLink {
+  type?: "link";
+  name: string;
+  url: string;
+  icon: string;
+}
+
+export interface SiteLinkFolder {
+  type: "folder";
+  name: string;
+  icon?: string;
+  children: SiteLink[];
+}
+
+export type SiteLinkItem = SiteLink | SiteLinkFolder;
+
+const links: SiteLinkItem[] = [
+  { name: "GitHub", url: "https://github.com/", icon: "mdi:github" },
+  { name: "Blog", url: "https://blog.example.com/", icon: "mdi:post-outline" },
+  { name: "Telegram", url: "https://t.me/", icon: "mdi:telegram" },
+  { name: "Bilibili", url: "https://space.bilibili.com/", icon: "ri:bilibili-line" },
+  { name: "Email", url: "mailto:hello@example.com", icon: "mdi:email-outline" },
+  {
+    type: "folder",
+    name: "示例文件夹",
+    icon: "mdi:folder-star-outline",
+    children: [
+      { name: "Vue 3", url: "https://cn.vuejs.org/", icon: "mdi:vuejs" },
+      { name: "Vite", url: "https://cn.vite.dev/", icon: "mdi:flash-outline" },
+      { name: "Tailwind CSS", url: "https://tailwindcss.com/", icon: "mdi:palette-outline" }
+    ]
+  }
+];
+
 export const siteConfig = {
   // 个人信息
   title: "星月澪の小站",
@@ -46,14 +80,8 @@ export const siteConfig = {
   },
 
   // 链接
-  // 使用 Iconify 图标名称（例如 Material Design Icons 的 'mdi:' 前缀）
-  links: [
-    { name: "GitHub", url: "https://github.com/", icon: "mdi:github" },
-    { name: "Blog", url: "https://blog.example.com/", icon: "mdi:post-outline" },
-    { name: "Telegram", url: "https://t.me/", icon: "mdi:telegram" },
-    { name: "Bilibili", url: "https://space.bilibili.com/", icon: "ri:bilibili-line" },
-    { name: "Email", url: "mailto:hello@example.com", icon: "mdi:email-outline" },
-  ],
+  // 支持普通链接和文件夹，图标使用 Iconify 名称
+  links,
 
   // 音乐播放器（MetingJS）
   music: {

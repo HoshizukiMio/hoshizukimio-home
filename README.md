@@ -106,11 +106,25 @@ hitokoto: {
 
 ```ts
 links: [
-  { name: "GitHub", url: "https://github.com/", icon: "mdi:github" }
+  { name: "GitHub", url: "https://github.com/", icon: "mdi:github" },
+  { name: "Telegram", url: "https://t.me/yourname", icon: "mdi:telegram" },
+  {
+    type: "folder",
+    name: "示例文件夹",
+    icon: "mdi:folder-star-outline",
+    children: [
+      { name: "Vue 3", url: "https://cn.vuejs.org/", icon: "mdi:vuejs" },
+      { name: "Vite", url: "https://cn.vite.dev/", icon: "mdi:flash-outline" }
+    ]
+  }
 ]
 ```
 
-图标名称使用 Iconify 图标集标识。
+- 普通链接项使用 `name`、`url`、`icon`
+- 文件夹项使用 `type: "folder"`、`name`、`icon`、`children`
+- `children` 里的每一项仍然是普通链接
+- 文件夹会以弹出层形式打开，不会直接挤占原本的导航网格
+- 图标名称使用 Iconify 图标集标识
 
 ### 音乐播放器
 
