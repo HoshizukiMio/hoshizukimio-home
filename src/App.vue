@@ -1,8 +1,8 @@
 <template>
+  <Background />
+
   <!-- Allow scrolling if the content exceeds screen height -->
-  <div class="app-shell relative isolate flex min-h-[100svh] w-full flex-col overflow-x-hidden overflow-y-auto px-3 py-4 sm:p-8">
-    <Background />
-    
+  <div class="app-shell relative z-10 isolate flex min-h-screen min-h-[100dvh] w-full flex-col overflow-x-hidden overflow-y-auto px-3 py-4 sm:p-8">
     <main class="relative z-10 mx-auto my-auto flex w-full max-w-5xl flex-col items-stretch justify-center gap-4 py-4 animate-fade-in-up sm:gap-6 sm:py-8 md:flex-row md:gap-8">
       
       <!-- Left side (Profile) -->
@@ -50,6 +50,12 @@ import Clock from './components/Clock.vue';
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up {
+    animation: none;
   }
 }
 

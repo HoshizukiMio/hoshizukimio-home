@@ -1,8 +1,8 @@
 <template>
-  <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+  <div class="site-background pointer-events-none fixed inset-0 z-0 overflow-hidden bg-slate-950 [background-image:radial-gradient(circle_at_top,_#1e293b_0%,_#050816_70%)]">
     <div
       v-if="bgUrl"
-      class="absolute inset-0 bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out"
+      class="motion-sensitive absolute inset-0 bg-center bg-no-repeat transition-opacity duration-1000 ease-in-out"
       :style="{
         backgroundImage: `url('${bgUrl}')`,
         backgroundSize: 'cover',
@@ -18,9 +18,6 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { siteConfig } from '@/config';
 import { resolveAssetPath } from '@/utils/assets';
-
-const DEFAULT_BACKGROUND =
-  'https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=1920&auto=format&fit=crop';
 
 type BackgroundMode = 'api' | 'list';
 
@@ -41,8 +38,6 @@ type CompatibleMediaQueryList = MediaQueryList & {
   removeListener?: (listener: (event: MediaQueryListEvent) => void) => void;
 };
 
-const bgUrl = ref('');
-const isLoaded = ref(false);
 let mediaQuery: CompatibleMediaQueryList | null = null;
 let loadVersion = 0;
 
@@ -109,12 +104,39 @@ function resolveBackgroundCandidates() {
 
   return Array.from(
     new Set([
-    ...resolvePresetCandidates(activePreset),
-    ...resolvePresetCandidates(fallbackPreset),
-    ...resolvePresetCandidates(background),
+      ...resolvePresetCandidates(activePreset),
+      ...resolvePresetCandidates(fallbackPreset),
+      ...resolvePresetCandidates(background),
     ]),
   );
 }
+
+function prioritizeBackground(url?: string) {
+  if (!url) {
+    return;
+  }
+
+  const absoluteUrl = new URL(url, document.baseURI).href;
+  const hasExistingPreload = Array.from(
+    document.querySelectorAll<HTMLLinkElement>('link[rel="preload"][as="image"]'),
+  ).some((link) => link.href === absoluteUrl);
+
+  if (hasExistingPreload) {
+    return;
+  }
+
+  const preloadLink = document.createElement('link');
+  preloadLink.rel = 'preload';
+  preloadLink.as = 'image';
+  preloadLink.href = url;
+  preloadLink.setAttribute('fetchpriority', 'high');
+  document.head.append(preloadLink);
+}
+
+const initialBackgroundCandidates = resolveBackgroundCandidates();
+prioritizeBackground(initialBackgroundCandidates[0]);
+const bgUrl = ref(initialBackgroundCandidates[0] ?? '');
+const isLoaded = ref(initialBackgroundCandidates.length > 0);
 
 function preloadImage(url: string) {
   return new Promise<string>((resolve, reject) => {
@@ -127,11 +149,14 @@ function preloadImage(url: string) {
   });
 }
 
-async function loadBackground() {
+async function loadBackground(candidates = resolveBackgroundCandidates()) {
   const currentLoad = ++loadVersion;
-  const candidates = resolveBackgroundCandidates();
+  prioritizeBackground(candidates[0]);
 
-  isLoaded.value = false;
+  if (!bgUrl.value && candidates[0]) {
+    bgUrl.value = candidates[0];
+    isLoaded.value = true;
+  }
 
   for (const candidate of candidates) {
     try {
@@ -152,8 +177,12 @@ async function loadBackground() {
     return;
   }
 
-  bgUrl.value = DEFAULT_BACKGROUND;
-  isLoaded.value = true;
+  bgUrl.value = '';
+  isLoaded.value = false;
+}
+
+function handleBackgroundMediaChange() {
+  void loadBackground();
 }
 
 onMounted(async () => {
@@ -162,11 +191,12 @@ onMounted(async () => {
 
   mediaQuery = window.matchMedia(`(max-width: ${breakpoint - 1}px)`) as CompatibleMediaQueryList;
   if (typeof mediaQuery.addEventListener === 'function') {
-    mediaQuery.addEventListener('change', loadBackground);
+    mediaQuery.addEventListener('change', handleBackgroundMediaChange);
   } else if (typeof mediaQuery.addListener === 'function') {
-    mediaQuery.addListener(loadBackground);
+    mediaQuery.addListener(handleBackgroundMediaChange);
   }
 
+  // Re-evaluate after mount in case the browser viewport settled between setup and first paint.
   await loadBackground();
 });
 
@@ -176,9 +206,16 @@ onBeforeUnmount(() => {
   }
 
   if (typeof mediaQuery.removeEventListener === 'function') {
-    mediaQuery.removeEventListener('change', loadBackground);
+    mediaQuery.removeEventListener('change', handleBackgroundMediaChange);
   } else if (typeof mediaQuery.removeListener === 'function') {
-    mediaQuery.removeListener(loadBackground);
+    mediaQuery.removeListener(handleBackgroundMediaChange);
   }
 });
 </script>
+
+<style scoped>
+.site-background {
+  height: 100vh;
+  height: 100dvh;
+}
+</style>

@@ -1,7 +1,7 @@
 <template>
   <div class="glass mx-auto flex h-full w-full max-w-sm flex-col items-center justify-center rounded-[2rem] p-6 text-center transition-shadow duration-300 hover:shadow-2xl sm:p-8">
     <div class="mb-5 h-24 w-24 overflow-hidden rounded-full border-4 border-white/50 shadow-lg sm:mb-6 sm:h-32 sm:w-32">
-      <img :src="siteConfig.avatar" alt="Avatar" class="w-full h-full object-cover transform hover:scale-110 transition-transform duration-500" />
+      <img :src="siteConfig.avatar" :alt="`${siteConfig.author}的头像`" class="motion-sensitive w-full h-full object-cover transform hover:scale-110 transition-transform duration-500" />
     </div>
     
     <h1 class="mb-2 text-2xl font-bold tracking-[0.18em] text-white drop-shadow-md sm:text-3xl">
@@ -13,11 +13,16 @@
     </p>
 
     <div class="flex min-h-[4.5rem] w-full flex-col items-center justify-center border-t border-white/20 pt-4 sm:min-h-[5rem]">
-      <p class="text-base font-light italic leading-relaxed text-white/90 drop-shadow-sm sm:text-lg">
+      <p aria-hidden="true" class="text-base font-light italic leading-relaxed text-white/90 drop-shadow-sm sm:text-lg">
         "{{ currentQuote }}"<span class="cursor-blink" v-show="isTyping">|</span>
       </p>
-      <p class="mt-2 w-full text-right text-xs text-white/70 transition-opacity duration-1000 sm:text-sm" :class="isTyping ? 'opacity-0' : 'opacity-100'" v-show="currentSource">
+      <p aria-hidden="true" class="motion-sensitive mt-2 w-full text-right text-xs text-white/70 transition-opacity duration-1000 sm:text-sm" :class="isTyping ? 'opacity-0' : 'opacity-100'" v-show="currentSource">
         —— {{ currentSource }}
+      </p>
+      <p class="sr-only" aria-live="polite" aria-atomic="true">
+        <template v-if="announcedQuote">
+          “{{ announcedQuote }}”<template v-if="announcedSource">，出处：{{ announcedSource }}</template>
+        </template>
       </p>
     </div>
   </div>
@@ -27,148 +32,182 @@
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { siteConfig } from '@/config';
 
+const TYPING_INTERVAL = 100;
+const SOURCE_REVEAL_DELAY = 300;
+const HITOKOTO_REQUEST_TIMEOUT = 8000;
+
 const currentQuote = ref('');
 const currentSource = ref('');
-const isTyping = ref(true);
-let typingTimer: number | undefined;
-let typingDoneTimer: number | undefined;
-let rotateTimer: number | undefined;
-let lastLocalQuoteIndex = -1;
-let isDisposed = false;
+const announcedQuote = ref('');
+const announcedSource = ref('');
+const isTyping = ref(false);
+const prefersReducedMotion = ref(false);
 
-const clearTimers = () => {
-  if (typingTimer !== undefined) {
+let activeQuote = '';
+let activeSource = '';
+let typingTimer: number | null = null;
+let sourceRevealTimer: number | null = null;
+let rotationTimer: number | null = null;
+let activeRequest: AbortController | null = null;
+let reducedMotionQuery: MediaQueryList | null = null;
+
+function clearTypingTimers() {
+  if (typingTimer !== null) {
     window.clearInterval(typingTimer);
-    typingTimer = undefined;
+    typingTimer = null;
   }
 
-  if (typingDoneTimer !== undefined) {
-    window.clearTimeout(typingDoneTimer);
-    typingDoneTimer = undefined;
+  if (sourceRevealTimer !== null) {
+    window.clearTimeout(sourceRevealTimer);
+    sourceRevealTimer = null;
   }
+}
 
-  if (rotateTimer !== undefined) {
-    window.clearTimeout(rotateTimer);
-    rotateTimer = undefined;
+function clearRotationTimer() {
+  if (rotationTimer !== null) {
+    window.clearTimeout(rotationTimer);
+    rotationTimer = null;
   }
-};
+}
 
-const getRotateInterval = () => {
-  const interval = Number(siteConfig.hitokoto.rotateInterval);
+function scheduleNextQuote() {
+  clearRotationTimer();
 
-  if (Number.isFinite(interval) && interval > 0) {
-    return interval;
-  }
-
-  return 15000;
-};
-
-const scheduleNextQuote = () => {
-  if (isDisposed) {
+  const delay = Number(siteConfig.hitokoto.rotateInterval);
+  if (!Number.isFinite(delay) || delay <= 0) {
     return;
   }
 
-  if (rotateTimer !== undefined) {
-    window.clearTimeout(rotateTimer);
-  }
+  rotationTimer = window.setTimeout(() => {
+    fetchHitokoto();
+  }, delay);
+}
 
-  rotateTimer = window.setTimeout(() => {
-    void fetchHitokoto();
-  }, getRotateInterval());
-};
+function finishQuoteImmediately() {
+  clearTypingTimers();
+  currentQuote.value = activeQuote;
+  currentSource.value = activeSource;
+  isTyping.value = false;
+  scheduleNextQuote();
+}
 
-const typeQuote = (text: string, source: string) => {
-  if (isDisposed) {
+function typeQuote(text: string, source?: string) {
+  clearTypingTimers();
+  clearRotationTimer();
+
+  activeQuote = text.trim();
+  activeSource = source?.trim() || '未知';
+  announcedQuote.value = activeQuote;
+  announcedSource.value = activeSource;
+
+  if (prefersReducedMotion.value) {
+    finishQuoteImmediately();
     return;
   }
 
-  clearTimers();
-
-  const safeText = text?.trim() || '欢迎来到这里。';
-  const safeSource = source?.trim() || '本站';
   let index = 0;
-
   currentQuote.value = '';
-  currentSource.value = safeSource;
+  currentSource.value = '';
   isTyping.value = true;
 
   typingTimer = window.setInterval(() => {
-    if (isDisposed) {
-      clearTimers();
-      return;
-    }
-
-    if (index < safeText.length) {
-      currentQuote.value += safeText.charAt(index);
+    if (index < activeQuote.length) {
+      currentQuote.value += activeQuote.charAt(index);
       index += 1;
       return;
     }
 
-    if (typingTimer !== undefined) {
+    if (typingTimer !== null) {
       window.clearInterval(typingTimer);
-      typingTimer = undefined;
+      typingTimer = null;
     }
 
-    typingDoneTimer = window.setTimeout(() => {
+    sourceRevealTimer = window.setTimeout(() => {
+      currentSource.value = activeSource;
       isTyping.value = false;
+      sourceRevealTimer = null;
       scheduleNextQuote();
-    }, 300);
-  }, 100);
-};
+    }, SOURCE_REVEAL_DELAY);
+  }, TYPING_INTERVAL);
+}
+
+function fallbackQuote() {
+  const quotes = Array.isArray(siteConfig.hitokoto.localQuotes)
+    ? siteConfig.hitokoto.localQuotes
+    : [];
+  const quote = quotes[Math.floor(Math.random() * quotes.length)];
+
+  if (!quote) {
+    typeQuote('欢迎来到我的小站', siteConfig.author);
+  } else if (typeof quote === 'string') {
+    typeQuote(quote, '未知');
+  } else {
+    typeQuote(quote.text, quote.from);
+  }
+}
 
 const fetchHitokoto = async () => {
+  clearRotationTimer();
+  activeRequest?.abort();
+
   if (siteConfig.hitokoto.enableAPI) {
+    const controller = new AbortController();
+    activeRequest = controller;
+    let didTimeout = false;
+    const requestTimeout = window.setTimeout(() => {
+      didTimeout = true;
+      controller.abort();
+    }, HITOKOTO_REQUEST_TIMEOUT);
+
     try {
       const apiUrl = siteConfig.hitokoto.api || 'https://v1.hitokoto.cn';
-      const res = await fetch(apiUrl);
-      const data = await res.json();
-      const text = typeof data?.hitokoto === 'string' ? data.hitokoto : '';
-      const source = typeof data?.from === 'string' ? data.from : '一言';
+      const res = await fetch(apiUrl, { signal: controller.signal });
+      if (!res.ok) {
+        throw new Error(`Hitokoto request failed with status ${res.status}`);
+      }
 
-      if (text) {
-        typeQuote(text, source);
+      const data = await res.json();
+      if (typeof data.hitokoto !== 'string' || data.hitokoto.trim().length === 0) {
+        throw new Error('Hitokoto response did not contain a quote');
+      }
+
+      typeQuote(data.hitokoto, data.from);
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError' && !didTimeout) {
         return;
       }
 
       fallbackQuote();
-    } catch (e) {
-      fallbackQuote();
+    } finally {
+      window.clearTimeout(requestTimeout);
+      if (activeRequest === controller) {
+        activeRequest = null;
+      }
     }
   } else {
     fallbackQuote();
   }
 };
 
-const fallbackQuote = () => {
-  const quotes = Array.isArray(siteConfig.hitokoto.localQuotes) ? siteConfig.hitokoto.localQuotes : [];
+function handleReducedMotionChange(event: MediaQueryListEvent) {
+  prefersReducedMotion.value = event.matches;
 
-  if (!quotes.length) {
-    typeQuote('欢迎来到这里。', '本站');
-    return;
+  if (event.matches && isTyping.value && activeQuote) {
+    finishQuoteImmediately();
   }
-
-  let nextIndex = Math.floor(Math.random() * quotes.length);
-
-  if (quotes.length > 1 && nextIndex === lastLocalQuoteIndex) {
-    nextIndex = (nextIndex + 1) % quotes.length;
-  }
-
-  lastLocalQuoteIndex = nextIndex;
-
-  const quote = quotes[nextIndex];
-  if (typeof quote === 'string') {
-    typeQuote(quote, '未知');
-  } else {
-    typeQuote(quote.text, quote.from);
-  }
-};
+}
 
 onMounted(() => {
-  void fetchHitokoto();
+  reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+  prefersReducedMotion.value = reducedMotionQuery.matches;
+  reducedMotionQuery.addEventListener('change', handleReducedMotionChange);
+  fetchHitokoto();
 });
 
 onBeforeUnmount(() => {
-  isDisposed = true;
-  clearTimers();
+  clearTypingTimers();
+  clearRotationTimer();
+  activeRequest?.abort();
+  reducedMotionQuery?.removeEventListener('change', handleReducedMotionChange);
 });
 </script>

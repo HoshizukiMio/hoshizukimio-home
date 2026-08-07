@@ -22,6 +22,18 @@
   50% { opacity: 0; }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .cursor-blink {
+    animation: none;
+  }
+
+  .motion-sensitive,
+  .transition-all {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
 html {
   background: #050816;
 }
@@ -44,5 +56,5 @@ body {
 
 #app {
   min-height: 100vh;
-  min-height: 100svh;
+  min-height: 100dvh;
 }

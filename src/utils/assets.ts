@@ -9,13 +9,10 @@ export function resolveAssetPath(path?: string) {
     return trimmed;
   }
 
-  if (trimmed.startsWith('/')) {
-    return trimmed;
-  }
+  const baseUrl = import.meta.env.BASE_URL.endsWith('/')
+    ? import.meta.env.BASE_URL
+    : `${import.meta.env.BASE_URL}/`;
+  const relativePath = trimmed.replace(/^\.\//, '').replace(/^\//, '');
 
-  if (trimmed.startsWith('./')) {
-    return `/${trimmed.slice(2)}`;
-  }
-
-  return `/${trimmed}`;
+  return `${baseUrl}${relativePath}`;
 }

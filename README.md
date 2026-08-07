@@ -17,7 +17,7 @@
 ## 技术栈
 
 - Vue 3
-- Vite 5
+- Vite 8
 - TypeScript
 - Tailwind CSS
 - Iconify
@@ -26,7 +26,7 @@
 
 ## 本地开发
 
-建议使用 Node.js 18 及以上版本。
+请使用 Node.js 20.19+ 或 22.12+。
 
 ```bash
 npm install
@@ -86,7 +86,7 @@ background: {
 - `desktop`: 桌面端背景配置
 - `mobile`: 手机端背景配置
 
-如果只配置了一端，组件会自动回退到另一端配置；如果两端都加载失败，则回退到内置默认背景。
+如果只配置了一端，组件会自动回退到另一端配置；如果两端都加载失败，则显示内置渐变背景。
 
 ### 一言文案
 
@@ -96,14 +96,11 @@ background: {
 hitokoto: {
   enableAPI: true,
   api: "https://v1.hitokoto.cn?c=a&c=b&c=c",
-  rotateInterval: 15000,
   localQuotes: [
     { text: "心之所向，素履以往。", from: "七堇年" }
   ]
 }
 ```
-
-- `rotateInterval`: 一言完整显示后多久切换下一条，单位为毫秒
 
 ### 导航链接
 
@@ -190,3 +187,17 @@ npm run build
 ```
 
 然后将 `dist/` 目录发布即可。
+
+### 子目录部署
+
+如果网站部署在域名子目录下，例如 `https://example.github.io/hoshizukimio-home/`，构建时通过 `VITE_BASE_PATH` 指定基础路径：
+
+```bash
+VITE_BASE_PATH=/hoshizukimio-home/ npm run build
+```
+
+背景图、图标和播放器代码都会自动使用对应的基础路径。
+
+### 异步加载播放器
+
+APlayer 与 MetingJS 已固定版本并打包到站点资源中，不再依赖页面头部的第三方 CDN。页面主体渲染后会自动异步载入播放器和歌单，既保持自动加载，也避免播放器代码阻塞首屏。

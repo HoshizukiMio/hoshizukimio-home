@@ -40,18 +40,28 @@
       class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-sm"
       @click.self="closeFolder"
     >
-      <div class="glass w-full max-w-2xl rounded-[2rem] border border-white/15 p-5 shadow-2xl sm:p-6">
+      <div
+        ref="dialogRef"
+        class="glass w-full max-w-2xl rounded-[2rem] border border-white/15 p-5 shadow-2xl sm:p-6"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="folderDialogTitleId"
+        tabindex="-1"
+        @keydown="handleDialogKeydown"
+      >
         <div class="mb-5 flex items-start justify-between gap-4">
           <div class="min-w-0">
             <div class="flex items-center gap-3 text-lg font-semibold text-white sm:text-xl">
               <Icon :icon="activeFolder.icon || 'mdi:folder-outline'" class="text-2xl" />
-              <span class="truncate">{{ activeFolder.name }}</span>
+              <span :id="folderDialogTitleId" class="truncate">{{ activeFolder.name }}</span>
             </div>
             <p class="mt-1 text-sm text-white/60">点击下方链接即可跳转，点空白处或右上角可以关闭。</p>
           </div>
 
           <button
+            ref="closeButtonRef"
             type="button"
+            aria-label="关闭文件夹"
             class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/75 transition-colors hover:bg-white/15 hover:text-white"
             @click="closeFolder"
           >
@@ -83,13 +93,18 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Icon } from '@iconify/vue';
 import { siteConfig, type SiteLinkFolder, type SiteLinkItem } from '@/config';
 
 const activeFolder = ref<SiteLinkFolder | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const closeButtonRef = ref<HTMLButtonElement | null>(null);
 const linkItems = computed<SiteLinkItem[]>(() => Array.isArray(siteConfig.links) ? siteConfig.links : []);
 const activeFolderChildren = computed(() => getFolderChildren(activeFolder.value));
+const folderDialogTitleId = 'site-links-folder-title';
+let previouslyFocusedElement: HTMLElement | null = null;
+let previousBodyOverflow = '';
 
 function isFolder(item: SiteLinkItem): item is SiteLinkFolder {
   return item.type === 'folder';
@@ -104,11 +119,25 @@ function getItemKey(item: SiteLinkItem, index: number) {
 }
 
 function openFolder(folder: SiteLinkFolder) {
+  previouslyFocusedElement = document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null;
   activeFolder.value = folder;
+  nextTick(() => {
+    closeButtonRef.value?.focus();
+  });
 }
 
 function closeFolder() {
+  if (!activeFolder.value) {
+    return;
+  }
+
   activeFolder.value = null;
+  nextTick(() => {
+    previouslyFocusedElement?.focus();
+    previouslyFocusedElement = null;
+  });
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -117,8 +146,48 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
+function handleDialogKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeFolder();
+    return;
+  }
+
+  if (event.key !== 'Tab' || !dialogRef.value) {
+    return;
+  }
+
+  const focusableElements = Array.from(
+    dialogRef.value.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => element.getClientRects().length > 0);
+
+  if (focusableElements.length === 0) {
+    event.preventDefault();
+    dialogRef.value.focus();
+    return;
+  }
+
+  const firstElement = focusableElements[0];
+  const lastElement = focusableElements[focusableElements.length - 1];
+
+  if (event.shiftKey && document.activeElement === firstElement) {
+    event.preventDefault();
+    lastElement.focus();
+  } else if (!event.shiftKey && document.activeElement === lastElement) {
+    event.preventDefault();
+    firstElement.focus();
+  }
+}
+
 watch(activeFolder, (folder) => {
-  document.body.style.overflow = folder ? 'hidden' : '';
+  if (folder) {
+    previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = previousBodyOverflow;
+  }
 });
 
 onMounted(() => {
@@ -127,6 +196,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleKeydown);
-  document.body.style.overflow = '';
+  document.body.style.overflow = previousBodyOverflow;
 });
 </script>
